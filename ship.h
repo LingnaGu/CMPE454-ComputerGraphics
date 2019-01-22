@@ -9,6 +9,7 @@
 #include "headers.h"
 #include "object.h"
 #include "shell.h"
+#include "math.h"
 
 
 #define SHIP_ROTATION_SPEED 2.5  // upon sidewise thrust, rotation speed in radians/second

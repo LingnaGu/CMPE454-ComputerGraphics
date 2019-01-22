@@ -14,7 +14,6 @@
 // vertices so that it is centred at (0,0).
 
 void Object::setupVAO( float objectVerts[], float objectWidth )
-
 {
   // ---- Rewrite the object vertices ----
 
@@ -54,53 +53,89 @@ void Object::setupVAO( float objectVerts[], float objectWidth )
 				 vec3( objectVerts[i+2], objectVerts[i+3], 0 ) ) );
 
   // ---- Create a VAO for this object ----
-
   // YOUR CODE HERE
+  glGenVertexArrays(1, &VAO);
+  glBindVertexArray(VAO);
+  getOGLError();
 }
 
+void Object::getOGLError()
+{
+	GLenum err;
+	err = glGetError();
+
+	if (err != 0)
+	{
+		std::cout << err;
+	}
+}
 
 // Draw the object
-
-
 void Object::draw( mat4 &worldToViewTransform )
-
 {
   mat4 modelToViewTransform;
 
   // YOUR CODE HERE (set the transform)
+  modelToViewTransform = modelToWorldTransform() * worldToViewTransform;
 
   // Tell the shaders about the model-to-view transform.  (See MVP in asteroids.vert.)
-
   glUniformMatrix4fv( glGetUniformLocation( myGPUProgram->id(), "MVP"), 1, GL_TRUE, &modelToViewTransform[0][0] );
 
   // YOUR CODE HERE (call OpenGL to draw the VAO of this object)
+  float *verts = new float[segments.size() * 4];
+
+  for (int j = 0; j < segments.size(); j++) 
+  {
+	  verts[j * 4 + 0] = segments[j].head.x;
+	  verts[j * 4 + 1] = segments[j].head.y;
+	  verts[j * 4 + 2] = segments[j].tail.x;
+	  verts[j * 4 + 3] = segments[j].tail.y;
+  }
+
+  // Fill a VBO with the object's vertices
+  GLuint VBO;
+  glGenBuffers(1, &VBO);
+  getOGLError();
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  getOGLError();
+  glBufferData(GL_ARRAY_BUFFER, segments.size() * 4 * sizeof(float), verts, GL_STATIC_DRAW);
+  getOGLError();
+
+  delete[] verts;
+
+  // Draw the stroke
+  glEnableVertexAttribArray(0);
+  getOGLError();
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
+  getOGLError();
+
+  glDrawArrays( GL_LINES, 0, segments.size()*2 );
+  getOGLError();
+
+  // Free everything
+  glDisableVertexAttribArray(0);
+  glDeleteBuffers(1, &VBO);
+  glDeleteVertexArrays(1, &VAO);
 }
 
 
 mat4 Object::modelToWorldTransform() const
-
 {
   mat4 M;
 
   // YOUR CODE HERE
+  M = scale(scaleFactor, scaleFactor, scaleFactor) * rotate( orientation.angle(), vec3(0, 0, 1) ) * translate( position.normalize() );
 
   return M;
 }
 
-
-
 // Update the pose (position and orientation)
-
-
 void Object::updatePose( float deltaT )
-
 {
   // Update position
-
   position = position + deltaT * velocity;
 
   // Update orientation
-
   float angularSpeed = angularVelocity.length();
   vec3 rotationAxis;
 
