@@ -76,7 +76,7 @@ void Object::draw( mat4 &worldToViewTransform )
   mat4 modelToViewTransform;
 
   // YOUR CODE HERE (set the transform)
-  modelToViewTransform = modelToWorldTransform() * worldToViewTransform;
+  modelToViewTransform = worldToViewTransform * modelToWorldTransform();
 
   // Tell the shaders about the model-to-view transform.  (See MVP in asteroids.vert.)
   glUniformMatrix4fv( glGetUniformLocation( myGPUProgram->id(), "MVP"), 1, GL_TRUE, &modelToViewTransform[0][0] );
@@ -124,7 +124,7 @@ mat4 Object::modelToWorldTransform() const
   mat4 M;
 
   // YOUR CODE HERE
-  M = scale(scaleFactor, scaleFactor, scaleFactor) * rotate( orientation.angle(), vec3(0, 0, 1) ) * translate( position.normalize() );
+  M = translate(position.x, position.y, 0) * rotate(orientation.angle(), vec3(0, 0, 1)) * scale(scaleFactor, scaleFactor, 1);
 
   return M;
 }
@@ -172,7 +172,7 @@ bool Object::intersects( Object const& obj ) const
     vec3 h = (M * vec4( segments[i].head )).toVec3();
     Segment seg(t,h);
 
-    if (obj.intersects( seg ))
+	if (obj.intersects(seg))
 	return true;
   }
 
@@ -191,7 +191,7 @@ bool Object::intersects( Segment const &seg ) const
     vec3 h = (M * vec4( segments[i].head )).toVec3();
     Segment s(t,h);
 
-    if (s.intersects( seg ))
+	if (s.intersects(seg))
 	return true;
   }
 

@@ -5,15 +5,31 @@
 
 
 void Ship::rotateCW( float deltaT )
-
 {
+  if (orientation.q.w > 0.9999)
+  {
+	  orientation.q.w = -1;
+  }
+  else if (orientation.q.w < -0.9999)
+  {
+	  orientation.q.w = 1;
+  }
+
   orientation = quaternion( - SHIP_ROTATION_SPEED * deltaT, vec3(0,0,1) ) * orientation;
 }
 
 
 void Ship::rotateCCW( float deltaT )
-
 {
+  if (orientation.q.w > 0.9999)
+  {
+    orientation.q.w = -1;
+  }
+  else if (orientation.q.w < -0.9999)
+  {
+	  orientation.q.w = 1;
+  }
+
   orientation = quaternion( + SHIP_ROTATION_SPEED * deltaT, vec3(0,0,1) ) * orientation;
 }
 
@@ -26,10 +42,8 @@ void Ship::addThrust( float deltaT )
   // since the object velocity is in the world coordinate system.
 
   // YOUR CODE HERE
-
-  velocity.x -= SHIP_THRUST_ACCEL * orientation.q.x * 15 * deltaT;
-  velocity.y += SHIP_THRUST_ACCEL * orientation.q.y * 15 * deltaT;
-  velocity.z += SHIP_THRUST_ACCEL * orientation.q.z * 15 *deltaT;
+  velocity.x -= SHIP_THRUST_ACCEL * sin( orientation.angle() ) * deltaT;
+  velocity.y += SHIP_THRUST_ACCEL * cos( orientation.angle() ) * deltaT;
 }
 
 
@@ -37,8 +51,9 @@ Shell * Ship::fireShell()
 
 {
   // YOUR CODE HERE (below, find the correct position, velocity, and orientation for the shell)
-
-  return new Shell( vec3(0,0,0), vec3(0,0,0), quaternion(1,0,0,0) );
+  float shipSpeed = 100; // m/s
+  vec3 shellVelocity = { -shipSpeed * sin(orientation.angle()), shipSpeed * cos(orientation.angle()), 0 };
+  return new Shell( position, shellVelocity, orientation );
 }
 
 
