@@ -85,7 +85,6 @@ void World::updateState( float elapsedTime )
   }
 
   // Update the shells (check for asteroid collisions)
-
   for (unsigned int i=0; i<shells.size(); i++) {
     shells[i]->elapsedTime += elapsedTime;
 
@@ -102,6 +101,74 @@ void World::updateState( float elapsedTime )
       // Check for shell/asteroid collision
 
       Segment path( prevPosition, shells[i]->centrePosition() );
+
+	  int numNewAsteroids = 0;
+
+	  // Iterate through each asteroid to see if they intersect with this shell's path
+	  for (unsigned int i = 0; i < asteroids.size()-numNewAsteroids; i++) 
+	  {
+		  if ( state == RUNNING && asteroids[i]->intersects(path) )
+		  {
+			  if (asteroids[i]->scaleFactor * ASTEROID_SCALE_FACTOR_REDUCTION < MIN_ASTEROID_SCALE_FACTOR)
+			  {
+				  // Remove this asteroid
+				  cout << "she too small" << endl;
+				  asteroids.erase(asteroids.begin() + i);
+				  i--;
+				  score += asteroids[i]->scoreValue;
+			  }
+			  else
+			  {
+				  // Break up this asteroid
+				  Asteroid* ast1 = new Asteroid( asteroids[i]->position );
+				  Asteroid* ast2 = new Asteroid( asteroids[i]->position );
+
+				  // Use direction of shell to dictate orientations of subasteroids
+				  float theta1 = asteroids[i]->orientation.angle() - (2*M_PI)/4;
+				  float theta2 = asteroids[i]->orientation.angle() + (2*M_PI)/4;
+
+				  if (theta2 > (2 * M_PI))
+				  {
+					  theta2 = fmod(theta2, 2 * M_PI);
+				  }
+				  if (theta1 < 0)
+				  {
+					  theta1 += (2 * M_PI);
+				  }
+
+				  quaternion subAstOrientation1 = quaternion(theta1, vec3(0, 0, 1));
+				  quaternion subAstOrientation2 = quaternion(theta2, vec3(0, 0, 1));
+
+				  vec3 subAstVelocity1 = { -200 * sin(theta1), 200 * cos(theta1), 0 };
+				  vec3 subAstVelocity2 = { -200 * sin(theta2), 200 * cos(theta2), 0 };
+				  ast1->velocity = subAstVelocity1;
+				  ast1->orientation = subAstOrientation1;
+				  ast2->velocity = subAstVelocity2;
+				  ast2->orientation = subAstOrientation2;
+
+
+				  // Set new score value and scaleFactor of subasteroids
+				  ast1->scoreValue /= 2;
+				  ast2->scoreValue /= 2;
+				  ast1->scaleFactor /= 3;
+				  ast2->scaleFactor /= 3;
+
+				  // Add to list of asteroids
+				  asteroids.push_back(ast1);
+				  asteroids.push_back(ast2);
+
+				  // Remove this asteroid
+				  asteroids.erase(asteroids.begin() + i);
+				  i--;
+				  score += asteroids[i]->scoreValue;
+
+				  // Update the number of asteroids added to the vector. 
+				  // This ensures that we don't check if the newly created asteroids 
+				  // collide with the shell (results in an infinite loop).
+				  numNewAsteroids += 2;
+			  }
+		  }
+	  }
 
       // YOUR CODE HERE
       //

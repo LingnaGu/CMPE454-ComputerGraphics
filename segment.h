@@ -17,7 +17,7 @@ class Segment {
 	//cout << "tail: (" << tail.x << ", " << tail.y << ") " << endl;
 	//cout << "s2head: (" << s2.head.x << ", " << s2.head.y << ") " << endl;
 	//cout << "s2tail: (" << s2.tail.x << ", " << s2.tail.y << ") " << endl;
-	//val = ccw(head, s2.head, s2.tail) != ccw(tail, s2.head, s2.tail) && ccw(head, tail, s2.head) != ccw(head, tail, s2.tail);
+	val = ccw(head, s2.head, s2.tail) != ccw(tail, s2.head, s2.tail) && ccw(head, tail, s2.head) != ccw(head, tail, s2.tail);
 
 	return val;
 	/*

@@ -51,7 +51,7 @@ Shell * Ship::fireShell()
 
 {
   // YOUR CODE HERE (below, find the correct position, velocity, and orientation for the shell)
-  float shipSpeed = 100; // m/s
+  float shipSpeed = 150; // m/s
   vec3 shellVelocity = { -shipSpeed * sin(orientation.angle()), shipSpeed * cos(orientation.angle()), 0 };
   return new Shell( position, shellVelocity, orientation );
 }
