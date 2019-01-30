@@ -99,78 +99,9 @@ void World::updateState( float elapsedTime )
       shells[i]->updatePose( elapsedTime );
 
       // Check for shell/asteroid collision
-
       Segment path( prevPosition, shells[i]->centrePosition() );
 
-	  int numNewAsteroids = 0;
-
-	  // Iterate through each asteroid to see if they intersect with this shell's path
-	  for (unsigned int i = 0; i < asteroids.size()-numNewAsteroids; i++) 
-	  {
-		  if ( state == RUNNING && asteroids[i]->intersects(path) )
-		  {
-			  if (asteroids[i]->scaleFactor * ASTEROID_SCALE_FACTOR_REDUCTION < MIN_ASTEROID_SCALE_FACTOR)
-			  {
-				  // Remove this asteroid
-				  cout << "she too small" << endl;
-				  asteroids.erase(asteroids.begin() + i);
-				  i--;
-				  score += asteroids[i]->scoreValue;
-			  }
-			  else
-			  {
-				  // Break up this asteroid
-				  Asteroid* ast1 = new Asteroid( asteroids[i]->position );
-				  Asteroid* ast2 = new Asteroid( asteroids[i]->position );
-
-				  // Use direction of shell to dictate orientations of subasteroids
-				  float theta1 = asteroids[i]->orientation.angle() - (2*M_PI)/4;
-				  float theta2 = asteroids[i]->orientation.angle() + (2*M_PI)/4;
-
-				  if (theta2 > (2 * M_PI))
-				  {
-					  theta2 = fmod(theta2, 2 * M_PI);
-				  }
-				  if (theta1 < 0)
-				  {
-					  theta1 += (2 * M_PI);
-				  }
-
-				  quaternion subAstOrientation1 = quaternion(theta1, vec3(0, 0, 1));
-				  quaternion subAstOrientation2 = quaternion(theta2, vec3(0, 0, 1));
-
-				  vec3 subAstVelocity1 = { -200 * sin(theta1), 200 * cos(theta1), 0 };
-				  vec3 subAstVelocity2 = { -200 * sin(theta2), 200 * cos(theta2), 0 };
-				  ast1->velocity = subAstVelocity1;
-				  ast1->orientation = subAstOrientation1;
-				  ast2->velocity = subAstVelocity2;
-				  ast2->orientation = subAstOrientation2;
-
-
-				  // Set new score value and scaleFactor of subasteroids
-				  ast1->scoreValue /= 2;
-				  ast2->scoreValue /= 2;
-				  ast1->scaleFactor /= 3;
-				  ast2->scaleFactor /= 3;
-
-				  // Add to list of asteroids
-				  asteroids.push_back(ast1);
-				  asteroids.push_back(ast2);
-
-				  // Remove this asteroid
-				  asteroids.erase(asteroids.begin() + i);
-				  i--;
-				  score += asteroids[i]->scoreValue;
-
-				  // Update the number of asteroids added to the vector. 
-				  // This ensures that we don't check if the newly created asteroids 
-				  // collide with the shell (results in an infinite loop).
-				  numNewAsteroids += 2;
-			  }
-		  }
-	  }
-
-      // YOUR CODE HERE
+	  // YOUR CODE HERE
       //
       // Check each of the asteroids to see if it has intersected the
       // shell's path.  If so, either (a) remove the asteroid if it is
@@ -186,6 +117,85 @@ void World::updateState( float elapsedTime )
       // - the sub-asteroid scaleFactor and scoreValue should be
       //   modified from those of the parent asteroid.
 
+	  // Update the number of asteroids added to the vector. 
+	  // This ensures that we don't check if the newly created asteroids 
+	  // collide with the shell (results in an infinite loop).
+	  int numNewAsteroids = 0; 
+
+	  // Iterate through each asteroid to see if it intersects with this shell's path
+	  for (unsigned int j = 0; j < asteroids.size()-numNewAsteroids; j++) 
+	  {
+		  if ( state == RUNNING && asteroids[j]->intersects(path) )
+		  {
+			  if (asteroids[j]->scaleFactor * ASTEROID_SCALE_FACTOR_REDUCTION < MIN_ASTEROID_SCALE_FACTOR)
+			  {
+				  // Remove this asteroid
+				  asteroids.erase(asteroids.begin() + j);	// Remove asteroid from list
+				  j--;										// After removing an asteroid from the list, we must update the value used to index
+				  score += asteroids[j]->scoreValue;		// Update the player's score
+			  }
+			  else
+			  {
+				  // Break this asteroid up
+
+				  // Define two new subasteroids in the same position as the parent asteroid
+				  Asteroid* ast1 = new Asteroid( asteroids[j]->position );
+				  Asteroid* ast2 = new Asteroid( asteroids[j]->position );
+
+				  // Use direction of shell to dictate the orientation of subasteroids
+				  // The subasteroids will move in opposite directions perpendicular to the shell
+				  float theta1 = shells[i]->orientation.angle() - (2*M_PI)/4; // Shell angle - pi/4
+				  float theta2 = shells[i]->orientation.angle() + (2*M_PI)/4; // Shell angle + pi/4
+
+				  // Wrap around both ways to keep radians within (0,2pi)
+				  if (theta2 > (2 * M_PI))
+				  {
+					  theta2 = fmod(theta2, 2 * M_PI);
+				  }
+				  if (theta1 < 0)
+				  {
+					  theta1 += (2 * M_PI);
+				  }
+
+				  // Define new orientations of subasteroids based on above angles
+				  quaternion subAstOrientation1 = quaternion(theta1, vec3(0, 0, 1));
+				  quaternion subAstOrientation2 = quaternion(theta2, vec3(0, 0, 1));
+
+				  // Calculate subasteroid velocities based on the angle calculated above
+				  float asteroidVelocity = sqrt( asteroids[j]->velocity.squaredLength() );
+
+				  vec3 subAstVelocity1 = { -asteroidVelocity * sin(theta1), asteroidVelocity * cos(theta1), 0 };
+				  vec3 subAstVelocity2 = { -asteroidVelocity * sin(theta2), asteroidVelocity * cos(theta2), 0 };
+
+				  ast1->velocity	= subAstVelocity1;
+				  ast1->orientation = subAstOrientation1;
+				  ast2->velocity	= subAstVelocity2;
+				  ast2->orientation = subAstOrientation2;
+
+				  // Set new score value and scaleFactor of subasteroids
+				  ast1->scoreValue /= 3;
+				  ast2->scoreValue /= 3;
+				  ast1->scaleFactor /= 3;
+				  ast2->scaleFactor /= 3;
+
+				  // Add to list of asteroids
+				  asteroids.push_back(ast1);
+				  asteroids.push_back(ast2);
+
+				  // Remove this asteroid
+				  asteroids.erase(asteroids.begin() + j);
+				  j--;
+
+				  // Update player's score
+				  score += asteroids[i]->scoreValue;
+
+				  // Update the number of asteroids added to the vector. 
+				  // This ensures that we don't check if the newly created asteroids 
+				  // collide with the shell (results in an infinite loop).
+				  numNewAsteroids += 2;
+			  }
+		  }
+	  }
     }
   }
 }

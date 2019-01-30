@@ -56,18 +56,6 @@ void Object::setupVAO( float objectVerts[], float objectWidth )
   // YOUR CODE HERE
   glGenVertexArrays(1, &VAO);
   glBindVertexArray(VAO);
-  getOGLError();
-}
-
-void Object::getOGLError()
-{
-	GLenum err;
-	err = glGetError();
-
-	if (err != 0)
-	{
-		std::cout << err;
-	}
 }
 
 // Draw the object
@@ -76,7 +64,7 @@ void Object::draw( mat4 &worldToViewTransform )
   mat4 modelToViewTransform;
 
   // YOUR CODE HERE (set the transform)
-  modelToViewTransform = worldToViewTransform * modelToWorldTransform();
+  modelToViewTransform = worldToViewTransform * modelToWorldTransform(); // Create model-to-view matrix
 
   // Tell the shaders about the model-to-view transform.  (See MVP in asteroids.vert.)
   glUniformMatrix4fv( glGetUniformLocation( myGPUProgram->id(), "MVP"), 1, GL_TRUE, &modelToViewTransform[0][0] );
@@ -84,6 +72,7 @@ void Object::draw( mat4 &worldToViewTransform )
   // YOUR CODE HERE (call OpenGL to draw the VAO of this object)
   float *verts = new float[segments.size() * 4];
 
+  // Copy segment data into array of vertices
   for (int j = 0; j < segments.size(); j++) 
   {
 	  verts[j * 4 + 0] = segments[j].head.x;
@@ -95,24 +84,17 @@ void Object::draw( mat4 &worldToViewTransform )
   // Fill a VBO with the object's vertices
   GLuint VBO;
   glGenBuffers(1, &VBO);
-  getOGLError();
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  getOGLError();
   glBufferData(GL_ARRAY_BUFFER, segments.size() * 4 * sizeof(float), verts, GL_STATIC_DRAW);
-  getOGLError();
 
-  delete[] verts;
+  delete[] verts; // Delete array of vertices
 
   // Draw the stroke
   glEnableVertexAttribArray(0);
-  getOGLError();
   glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
-  getOGLError();
+  glDrawArrays( GL_LINES, 0, segments.size() * 2 ); // Multiply by 2 because there is a head and tail for each segment
 
-  glDrawArrays( GL_LINES, 0, segments.size()*2 );
-  getOGLError();
-
-  // Free everything
+  // Free VBO and VAO
   glDisableVertexAttribArray(0);
   glDeleteBuffers(1, &VBO);
   glDeleteVertexArrays(1, &VAO);
@@ -124,6 +106,8 @@ mat4 Object::modelToWorldTransform() const
   mat4 M;
 
   // YOUR CODE HERE
+
+  // Scale, rotate, then translate to the correct position
   M = translate(position.x, position.y, 0) * rotate(orientation.angle(), vec3(0, 0, 1)) * scale(scaleFactor, scaleFactor, 1);
 
   return M;
