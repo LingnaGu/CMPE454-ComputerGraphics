@@ -1,7 +1,7 @@
 LDFLAGS  = -L. -Llib32 -lglfw -lGL -lGLU -ldl
 CXXFLAGS = -g -Wall -Wno-write-strings -Wno-parentheses -DLINUX
 
-OBJS = main.o world.o object.o ship.o asteroid.o shell.o gpuProgram.o linalg.o strokefont.o fg_stroke.o glad/src/glad.o
+OBJS = main.o world.o object.o ship.o asteroid.o shell.o gpuProgram.o linalg.o strokefont.o fg_stroke.o staticShip.o glad/src/glad.o
 EXEC = asteroids
 
 all:    $(EXEC)
@@ -37,3 +37,4 @@ ship.o: ship.h headers.h linalg.h object.h shell.h
 strokefont.o: strokefont.h headers.h linalg.h
 world.o: world.h headers.h linalg.h ship.h object.h shell.h asteroid.h main.h
 world.o: seq.h gpuProgram.h strokefont.h
+Staticship.o: ship.h headers.h linalg.h object.h

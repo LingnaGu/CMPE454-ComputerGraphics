@@ -14,6 +14,7 @@
 // vertices so that it is centred at (0,0).
 
 void Object::setupVAO( float objectVerts[], float objectWidth )
+
 {
   // ---- Rewrite the object vertices ----
 
@@ -53,13 +54,18 @@ void Object::setupVAO( float objectVerts[], float objectWidth )
 				 vec3( objectVerts[i+2], objectVerts[i+3], 0 ) ) );
 
   // ---- Create a VAO for this object ----
+
   // YOUR CODE HERE
   glGenVertexArrays(1, &VAO);
   glBindVertexArray(VAO);
+  // The VBO setup code is in Object::Draw()
+  // That way I can create/free in the same function
 }
+
 
 // Draw the object
 void Object::draw( mat4 &worldToViewTransform )
+
 {
   mat4 modelToViewTransform;
 
@@ -67,13 +73,14 @@ void Object::draw( mat4 &worldToViewTransform )
   modelToViewTransform = worldToViewTransform * modelToWorldTransform(); // Create model-to-view matrix
 
   // Tell the shaders about the model-to-view transform.  (See MVP in asteroids.vert.)
+
   glUniformMatrix4fv( glGetUniformLocation( myGPUProgram->id(), "MVP"), 1, GL_TRUE, &modelToViewTransform[0][0] );
 
   // YOUR CODE HERE (call OpenGL to draw the VAO of this object)
   float *verts = new float[segments.size() * 4];
 
   // Copy segment data into array of vertices
-  for (int j = 0; j < segments.size(); j++) 
+  for (unsigned int j = 0; j < segments.size(); j++) 
   {
 	  verts[j * 4 + 0] = segments[j].head.x;
 	  verts[j * 4 + 1] = segments[j].head.y;
@@ -102,24 +109,29 @@ void Object::draw( mat4 &worldToViewTransform )
 
 
 mat4 Object::modelToWorldTransform() const
+
 {
   mat4 M;
 
   // YOUR CODE HERE
-
-  // Scale, rotate, then translate to the correct position
-  M = translate(position.x, position.y, 0) * rotate(orientation.angle(), vec3(0, 0, 1)) * scale(scaleFactor, scaleFactor, 1);
+  // Apply translation, rotation, and scaling matrix
+  M = translate(position.x, position.y, 0) * scale(scaleFactor, scaleFactor, 1) * rotate(orientation.angle(), vec3(0,0,1));
 
   return M;
 }
 
 // Update the pose (position and orientation)
+
+
 void Object::updatePose( float deltaT )
+
 {
   // Update position
+
   position = position + deltaT * velocity;
 
   // Update orientation
+
   float angularSpeed = angularVelocity.length();
   vec3 rotationAxis;
 
@@ -156,7 +168,7 @@ bool Object::intersects( Object const& obj ) const
     vec3 h = (M * vec4( segments[i].head )).toVec3();
     Segment seg(t,h);
 
-	if (obj.intersects(seg))
+    if (obj.intersects( seg ))
 	return true;
   }
 
@@ -175,7 +187,7 @@ bool Object::intersects( Segment const &seg ) const
     vec3 h = (M * vec4( segments[i].head )).toVec3();
     Segment s(t,h);
 
-	if (s.intersects(seg))
+    if (s.intersects( seg ))
 	return true;
   }
 

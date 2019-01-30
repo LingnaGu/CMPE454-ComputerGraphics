@@ -3,6 +3,7 @@
 
 #include "world.h"
 #include "ship.h"
+#include "staticShip.h"
 #include "main.h"
 #include "gpuProgram.h"
 #include "strokefont.h"
@@ -24,6 +25,7 @@ void World::start()
 
   asteroids.clear();
   shells.clear();
+  staticShips.clear();
 
   for (int i=0; i<NUM_INITIAL_ASTEROIDS; i++) {
 
@@ -40,6 +42,26 @@ void World::start()
   for (unsigned int  i=0; i<asteroids.size(); i++) {
     asteroids[i]->velocity = ((1+round) * ASTEROID_SPEED_ROUND_FACTOR) * asteroids[i]->velocity;
     asteroids[i]->angularVelocity = ((1+round) * ASTEROID_SPEED_ROUND_FACTOR) * asteroids[i]->angularVelocity;
+  }
+  
+  if(numLives == 0)
+  {
+  	numLives = 3;  
+  	highscore = score;
+  	score = 0;
+  }
+  else if(numLives != 3 && numLives != 2 && numLives != 1)
+  {
+  	  numLives = 3;
+  }
+  
+  // Draw ships representing how many lives the player has remaining
+  cout << numLives << endl;
+  for(int i=0; i<numLives; i++)
+  {
+    vec3 pos = vec3(30+i*30, SCREEN_WIDTH/SCREEN_ASPECT-30, 0);
+    staticShips.push_back( new StaticShip( pos ) );
+    staticShips[i]->scaleFactor = 2;
   }
 
   state = RUNNING;
@@ -81,10 +103,15 @@ void World::updateState( float elapsedTime )
   for (unsigned int i=0; i<asteroids.size(); i++) {
     asteroids[i]->updatePose( elapsedTime );
     if (state == RUNNING && ship->intersects( *asteroids[i] ))
+    {
+      numLives--;
+      
       gameOver();
+    }
   }
 
   // Update the shells (check for asteroid collisions)
+
   for (unsigned int i=0; i<shells.size(); i++) {
     shells[i]->elapsedTime += elapsedTime;
 
@@ -196,6 +223,7 @@ void World::updateState( float elapsedTime )
 			  }
 		  }
 	  }
+
     }
   }
 }
@@ -243,7 +271,17 @@ void World::draw()
     ss.setf( ios::fixed, ios::floatfield );
     ss.precision(1);
     ss << "SCORE " << score;
-    drawStrokeString( ss.str(), -0.95, 0.75, 0.06, glGetUniformLocation( myGPUProgram->id(), "MVP"), LEFT );
+    drawStrokeString( ss.str(), -0.95, 0.75, 0.04, glGetUniformLocation( myGPUProgram->id(), "MVP"), LEFT );
+    
+    stringstream hs;
+    hs.setf( ios::fixed, ios::floatfield );
+    hs.precision(1);
+    hs << "SESSION HIGHSCORE " << highscore;
+    drawStrokeString( hs.str(), -0.95, 0.68, 0.04, glGetUniformLocation( myGPUProgram->id(), "MVP"), LEFT );
+    
+    // Draw number of lives
+    for (unsigned int i=0; i<staticShips.size(); i++)
+    	staticShips[i]->draw( worldToViewTransform );
 
     if (state == AFTER_GAME) {
 

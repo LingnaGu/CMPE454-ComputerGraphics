@@ -44,7 +44,6 @@ class Object {
   mat4 modelToWorldTransform() const;
   bool intersects( Segment const& seg ) const;
   bool intersects( Object const& obj ) const;
-  void getOGLError();
 
   void reset( vec3 pos ) {
     position = pos;

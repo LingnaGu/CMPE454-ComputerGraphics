@@ -12,6 +12,7 @@
 #include "main.h"
 #include "seq.h"
 #include "shell.h"
+#include "staticShip.h"
 
 
 #define WORLD_MIN vec3( 0, 0, 0 )
@@ -30,10 +31,13 @@ class World {
   Ship *ship;
   vector<Asteroid *> asteroids;
   vector<Shell *> shells;
+  vector<StaticShip *> staticShips;
 
   int score;
   int round;
   State state;			// game state
+  int numLives;
+  int highscore;
 
  public:
 
@@ -46,6 +50,8 @@ class World {
     state = BEFORE_GAME;
     score = 0;
     round = 0;
+    numLives = 3;
+    highscore = 0;
   }
 
   void start();
