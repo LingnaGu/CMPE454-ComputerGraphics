@@ -85,6 +85,7 @@ void World::updateState( float elapsedTime )
   }
 
   // Update the shells (check for asteroid collisions)
+
   for (unsigned int i=0; i<shells.size(); i++) {
     shells[i]->elapsedTime += elapsedTime;
 
@@ -196,6 +197,7 @@ void World::updateState( float elapsedTime )
 			  }
 		  }
 	  }
+
     }
   }
 }
