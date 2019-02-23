@@ -1,5 +1,4 @@
 // Pass 1 fragment shader
-//
 // Outputs colour, normal, depth to three textures
 
 #version 300 es

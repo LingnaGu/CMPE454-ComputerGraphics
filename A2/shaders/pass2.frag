@@ -42,5 +42,34 @@ void main()
   
   //fragLaplacian = -1.0 * texture( depthSampler, texCoordOffset ) + ...
 
-  fragLaplacian = vec3( 0.1, 0.2, 0.3 );
+  //fragLaplacian = vec3( 0.1, 0.2, 0.3 );
+
+
+  //The middle square 
+  fragLaplacian = 8.0 * texture(depthSampler, texCoords).xyz;
+
+  //The top left square
+  fragLaplacian -= texture(depthSampler, texCoords + vec2(-texCoordInc.x, texCoordInc.y) ).xyz;  
+
+  //The top middle square
+  fragLaplacian -= texture(depthSampler, texCoords + vec2(0, texCoordInc.y) ).xyz;              
+
+  //The top right square
+  fragLaplacian -= texture(depthSampler, texCoords + vec2(texCoordInc.x, texCoordInc.y) ).xyz;   
+
+  //The left square 
+  fragLaplacian -= texture(depthSampler, texCoords + vec2(-texCoordInc.x, 0) ).xyz;              
+
+  //the rights square 
+  fragLaplacian -= texture(depthSampler, texCoords + vec2(texCoordInc.x, 0) ).xyz;               
+
+  //The bottom left square 
+  fragLaplacian -= texture(depthSampler, texCoords + vec2(-texCoordInc.x, -texCoordInc.y) ).xyz; 
+
+  //The bottom middle square 
+  fragLaplacian -= texture(depthSampler, texCoords + vec2(0, -texCoordInc.y) ).xyz;              
+
+  //The bottom right square 
+  fragLaplacian -= texture(depthSampler, texCoords + vec2(texCoordInc.x, -texCoordInc.y) ).xyz;  
+
 }
