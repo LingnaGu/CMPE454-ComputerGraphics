@@ -89,6 +89,7 @@ void main()
 
   const int kernelRadius = 1;
   int count = 0;
+  bool isEdge = false;
   
   for (int y = 0-kernelRadius; y <= kernelRadius+1; y++)
   {
@@ -98,8 +99,14 @@ void main()
 
       if (fragCoords.x >= 0 && fragCoords.y >= 0 && fragCoords.x < 50 && fragCoords.y < 50)
       {
+          // TODO: how to detect edge of model? edge+1 will go over
         if ( texture2D(laplacianSampler, fragCoords).r < -0.1 )
         {
+          if (x == 0 && y == 0)
+          {
+            isEdge = true;
+          }
+
           count++;
           break;
         }
@@ -118,12 +125,23 @@ void main()
   // than if we test only the fragment.
 
   // YOUR CODE HERE
-  if (count == 0)
+  if (count != 0)
   {
-    outputColour = vec4(0.0,0.0,0.0,1.0);
+    // Detected edge in 3x3 neighbourhood
+    outputColour = vec4(0.0, 0.0, 0.0, 0.0); // Black
+    
+    if (!isEdge)
+    {
+      // Output black blended with phong computed colour if fragment isn't an edge
+      // Assumed we aren't adding any specular, emissive, or ambient lighting
+      // We don't have V for specual reflection, and objects don't normally have emissive or ambient lighting
+      mediump vec3 blendColour = 0.5 * (colour) + 0.5 * vec3(0.0, 0.0, 0.0);
+      outputColour = vec4(NdotL * blendColour, 1.0);
+    }
   }
   else
   {
+    // Did not detect edge in 3x3 neighbourhood
     outputColour = vec4(colour, 1);
   }
 }
