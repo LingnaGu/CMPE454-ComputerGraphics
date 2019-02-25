@@ -29,24 +29,25 @@ void main()
   // the R component of the texture as texture2D( ... ).r
 
   // YOUR CODE HERE
-  lowp float depth = texture( depthSampler, texCoords ).r;
+  mediump float depth = texture(depthSampler, texCoords).r;
+  mediump float laplacian = texture(laplacianSampler, texCoords).r;
 
   // [1 mark] Discard the fragment if it is a background pixel not
   // near the silhouette of the object.
 
   // YOUR CODE HERE
-  if (depth == 1.0) {
-    // Background
-    outputColour = vec4( 1, 0.7, 0.3, 1 );
-    return;
-  }  
+  if (depth == 1.0)
+  {
+    // Discard fragment if background pixel
+    discard;
+  }
 
   // [0 marks] Look up value for the colour and normal.  Use the RGB
   // components of the texture as texture2D( ... ).rgb or texture2D( ... ).xyz.
 
   // YOUR CODE HERE
-  highp vec3 colour = texture( colourSampler, texCoords ).rgb;
-  highp vec3 normal = texture( normalSampler, texCoords  ).rgb;  
+  mediump vec3 colour = texture(colourSampler, texCoords).rgb;
+  mediump vec3 normal = texture(normalSampler, texCoords).xyz;  
 
   // [2 marks] Compute Cel shading, in which the diffusely shaded
   // colour is quantized into four possible values.  Do not allow the
@@ -55,23 +56,26 @@ void main()
   // to have that many divisions of quanta of colour.  Your code
   // should be very efficient.
 
-  highp float NdotL = dot( normalize(normal), lightDir );
-
-  highp float numQuanta = 3.0;
-  //const int numQuanta = 3;
-
-  //highp float k = 1.0 / numQuanta;
-
   // YOUR CODE HERE
-  for (highp float i = 0.0; i < 1.0; i += 1.0/numQuanta) {
-    if (NdotL > i) {
+
+  const int numQuanta = 3;
+  highp float increment = 1.0 / float(numQuanta);
+  highp float NL = dot( normalize(normal), lightDir );  // Compute N dot L
+
+  // Iterate through quantized shading levels to find correct level based on NL
+  for ( highp float i = 0.0; i < 1.0; i += increment ) 
+  {
+    if (NL < 0.2) 
+    {
+      // Don't allow diffuse component to be below 0.2
+      outputColour = 0.2 * vec4(colour, 1.0);
+      break;
+    }
+    if (NL > i) 
+    {
       outputColour = i * vec4(colour, 1.0);
     }
   }
-
-  if (NdotL < 0.2) {
-    outputColour = 0.2 * vec4(colour, 1.0);
-  }  
 
   // [2 marks] Count number of fragments in the 3x3 neighbourhood of
   // this fragment with a Laplacian that is less than -0.1.  These are
@@ -83,18 +87,30 @@ void main()
   // around this fragment.
 
   const int kernelRadius = 1;
+  bool isEdge = false;
+  int count = 0;
+  
+  // Iterate through neighbourhood to detect if the fragment is part of an edge, or has an edge in it's neighbourhood
+  for (int y = 0-kernelRadius; y <= kernelRadius+1; y++)
+  {
+    for (int x = 0-kernelRadius; x <= kernelRadius+1; x++)
+    {
+      // Calculate fragment coords for lookup
+      mediump vec2 fragCoords = vec2( texCoords.x + float(x), texCoords.y + float(y) );
 
-  // YOUR CODE HERE
-  bool stop = false;
+      if ( texture2D(laplacianSampler, fragCoords).r < -0.1 )
+      {
+        // We have identified an edge
+        if (x == 0 && y == 0)
+        {
+          // If this fragment itself is an edge
+          isEdge = true;
+        }
 
-  for (int x = 0; x < 2*kernelRadius && !stop; x++) {
-    for (int y = 0; y < 2*kernelRadius && !stop; y++) {
-      if (texture(laplacianSampler, texCoords + vec2(float(x - kernelRadius)*texCoordInc.x, float(y - kernelRadius)*texCoordInc.y)).r < -0.1) {
-        outputColour = vec4(0,0,0,1);
-        stop = true;
+        count++;
       }
     }
-  }  
+  }
 
   // [0 marks] Output the fragment colour.  If there is an edge
   // fragment in the 3x3 neighbourhood of this fragment, output a
@@ -106,5 +122,26 @@ void main()
 
   // YOUR CODE HERE
 
-  //outputColour = vec4( 1.0, 0.0, 1.0, 1.0 );
+  if (count > 0)
+  {
+    // Detected edge in 3x3 neighbourhood
+    mediump vec4 edgeColour = vec4(0.0, 0.0, 0.0, 1.0); // Black
+    
+    if (isEdge)
+    {
+      outputColour = edgeColour;
+    }
+    else
+    {
+      // Output black blended with phong computed colour if fragment isn't an edge but has edges in it's 3x3 neighbourhood.
+      // Assumed we aren't adding any specular, emissive, or ambient lighting.
+      // We don't have V for specular reflection and objects don't normally have emissive or ambient lighting.
+      mediump vec4 blendColour = 0.5 * NL * outputColour + 0.5 * edgeColour; // Blend of black edge and Phong
+      outputColour = vec4(blendColour);
+    }
+  }
+  else
+  {
+    // Did not detect edge in 3x3 neighbourhood, outputColour is already defined during quantization
+  }
 }
