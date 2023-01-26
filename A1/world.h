@@ -38,6 +38,7 @@ class World {
   State state;			// game state
   int numLives;
   int highscore;
+  int l;
 
  public:
 
